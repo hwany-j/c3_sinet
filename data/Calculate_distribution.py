@@ -1,8 +1,3 @@
-'''
-C3SINet
-Copyright (c) 2019-present NAVER Corp.
-MIT license
-'''
 
 import numpy as np
 import cv2
