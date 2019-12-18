@@ -1,9 +1,3 @@
-'''
-C3SINet
-Copyright (c) 2019-present NAVER Corp.
-MIT license
-'''
-
 
 from __future__ import absolute_import
 from __future__ import unicode_literals
