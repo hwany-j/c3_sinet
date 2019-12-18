@@ -2,12 +2,6 @@ import numpy as np
 import cv2
 import pickle
 
-'''
-C3SINet
-Copyright (c) 2019-present NAVER Corp.
-MIT license
-'''
-
 
 class LoadData:
     '''
