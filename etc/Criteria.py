@@ -1,8 +1,6 @@
-
 import torch.nn as nn
 import torch.nn.functional as F
 import torch
-
 
 
 class CrossEntropyLoss2d(nn.Module):

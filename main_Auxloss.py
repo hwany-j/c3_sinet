@@ -3,8 +3,9 @@ C3SINet
 Copyright (c) 2019-present NAVER Corp.
 MIT license
 '''
+
 import os
-# os.environ['CUDA_VISIBLE_DEVICES'] = "1"
+os.environ['CUDA_VISIBLE_DEVICES'] = "0"
 
 import time
 import json
@@ -28,8 +29,11 @@ import torchvision
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-c', '--config', type=str, default='./setting/mobileV3_1stageAux.json', help='JSON file for configuration')
-    parser.add_argument('-n', '--use_nsml', type=bool, default=True, help='Play with NSML!')
+    parser.add_argument('-c', '--config', type=str, default='./setting/SINet.json', help='JSON file for configuration')
+    # parser.add_argument('-o', '--optim', type=str, default="SGD", help='Adam , SGD, RMS')
+    # parser.add_argument('-s', '--lrsch', type=str, default="warmpoly", help='step, poly, multistep, warmpoly')
+    # parser.add_argument('-t', '--wd_tfmode', type=bool, default=True, help='Play with NSML!')
+    # parser.add_argument('-w', '--weight_decay', type=float, default=4e-5, help='value for weight decay')
     parser.add_argument('-v', '--outvisdom', type=bool, default=True, help='outVisdom')
 
     args = parser.parse_args()
@@ -59,19 +63,24 @@ if __name__ == '__main__':
             cls=train_config["num_classes"], width_mult=train_config["width_mult"],
             input_w=data_config["input_w"],  input_h=data_config["input_h"])
 
-    elif train_config.startswith('Dnc_SIN'):
+    elif train_config["Model"].startswith('Dnc_SIN'):
         model = models.__dict__[train_config["Model"]](
             classes=train_config["num_classes"], p=train_config["p"], q=train_config["q"],
             chnn=train_config["chnn"])
 
     model_name = train_config["Model"]
 
+    # if args.use_nsml:
+    #     model.BatchNorm = batchnormsync.BatchNormSync
+    #     print("load batch sync")
+
+
     #################### common model setting and opt setting  #######################################
 
-    if args.use_nsml:
-        from nsml import DATASET_PATH
-        data_config['data_dir'] = os.path.join(DATASET_PATH, 'train')
 
+    # import sys
+        # sys.path.append('/')
+        # from bn_sync.modules import batchnormsync
 
     num_gpu =  torch.cuda.device_count()
     color_transform = Colorize(data_config["classes"])
@@ -108,7 +117,7 @@ if __name__ == '__main__':
     logger, this_savedir = info_setting(train_config['save_dir'], train_config["Model"])
     logger.flush()
     logdir = this_savedir.split(train_config['save_dir'])[1]
-    nsml_logger = Logger(8097, './logs/' + logdir, args.use_nsml)
+    nsml_logger = Logger(8097, './logs/' + logdir, False)
 
     trainLoader, valLoader, data = get_dataloader(data_config)
 
@@ -141,7 +150,16 @@ if __name__ == '__main__':
                     params_set += [{'params': [value], 'weight_decay': args.weight_decay}]
             else:
                 params_set += [{'params': [value], 'weight_decay': others}]
-
+                #
+                # if "bn" in key :
+                #     if "weight" in key:
+                #         params_set += [{'params': [value], 'weight_decay': others}]
+                #         names_set.append(key)
+                #     else:
+                #         params_set += [{'params': [value], 'weight_decay': 0.0}]
+                # else:
+                #     params_set += [{'params': [value], 'weight_decay': 0.0}]
+        # print(names_set)
 
         if args.optim == "Adam":
             optimizer = torch.optim.Adam(params_set, train_config['learning_rate'], (0.9, 0.999), eps=1e-08,
@@ -302,7 +320,7 @@ if __name__ == '__main__':
     logger.close()
 
     print(" max iou : " + Max_name + '\t' + str(Max_val_iou))
-    Vis_Result(model_name, args.config, args.use_nsml, Max_name, mode="pil")
+    Vis_Result(model_name, args.config, False, Max_name, mode="pil")
 
 
 

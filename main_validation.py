@@ -3,9 +3,9 @@ C3SINet
 Copyright (c) 2019-present NAVER Corp.
 MIT license
 '''
-s
+
 import os
-os.environ['CUDA_VISIBLE_DEVICES'] = "1"
+os.environ['CUDA_VISIBLE_DEVICES'] = "0"
 
 import time
 import json
@@ -29,8 +29,7 @@ import torchvision
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-c', '--config', type=str, default='./test_setting/C3.json', help='JSON file for configuration')
-    parser.add_argument('-n', '--use_nsml', type=bool, default=False, help='Play with NSML!')
+    parser.add_argument('-c', '--config', type=str, default='./test_setting/SINet.json', help='JSON file for configuration')
     parser.add_argument('-v', '--outvisdom', type=bool, default=False, help='outVisdom')
     parser.add_argument('-t', '--Testserver', type=bool, default=False, help='Testserver')
 
@@ -54,7 +53,7 @@ if __name__ == '__main__':
             D_rate=test_config["D_rate"], chnn=test_config["chnn"])
 
 
-    elif test_config.startswith('Dnc_SIN'):
+    elif test_config["Model"].startswith('Dnc_SIN'):
         model = models.__dict__[test_config["Model"]](
             classes=test_config["num_classes"], p=test_config["p"], q=test_config["q"], chnn=test_config["chnn"])
 
@@ -62,11 +61,9 @@ if __name__ == '__main__':
 
     #################### common model setting and opt setting  #######################################
 
-    if args.use_nsml:
-        from nsml import DATASET_PATH
 
-        data_config['data_dir'] = os.path.join(DATASET_PATH, 'train')
-    nsml_logger = Logger(8097, './logs/', args.use_nsml)
+
+    nsml_logger = Logger(8097, './logs/', False)
 
     color_transform = Colorize(data_config["classes"])
 
@@ -111,9 +108,9 @@ if __name__ == '__main__':
     ################################ start Enc train ##########################################
     #
     #
-    Val_Result(model_name, args.config, args.use_nsml, model, mode="CV")
+    Val_Result(model_name, args.config, False, model, mode="CV")
     if args.Testserver:
-        Vis_Result(model_name, args.config, args.use_nsml, Max_name, mode="CV")
+        Vis_Result(model_name, args.config, False, Max_name, mode="CV")
 
     print("========== validation check ===========")
 

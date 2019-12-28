@@ -23,7 +23,7 @@
     },
     "data_config": {
         "dataset_name": "cityCV",
-         "cached_data_file" : "./data/city_Jin.p",
+         "cached_data_file" : "./data/city.p",
          "data_dir": "../../Link512DATA/cityscape",
         "classes" : 20,
         "batch_size": 12,

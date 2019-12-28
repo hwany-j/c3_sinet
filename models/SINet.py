@@ -1,3 +1,9 @@
+'''
+C3SINet
+Copyright (c) 2019-present NAVER Corp.
+MIT licenses
+'''
+
 import torch
 import torch.nn as nn
 BN_moment = 0.1

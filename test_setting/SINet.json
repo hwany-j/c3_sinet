@@ -1,6 +1,6 @@
 {
-    "train_config": {
-        "resume": "",
+    "test_config": {
+        "model_name": "./result/SINet/SINet.pth",
         "Model": "Dnc_SINaux",
 
         "learning_rate": 0.045,
@@ -8,7 +8,7 @@
         "p" : 3,
         "q" : 10,
         "chnn" : 4,
-        "epochs": 1500,
+        "epochs": 3,
 
         "save_dir": "./result",
         "optim" : "SGD",
@@ -28,7 +28,7 @@
         "baseSize" : 2048,
         "ignore_idx" : 19,
         "scale1" : 16,
-        "scale2" : 2,
+         "scale2" : 2,
         "num_work" : 4
     }
 }

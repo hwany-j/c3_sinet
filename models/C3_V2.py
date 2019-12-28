@@ -1,8 +1,9 @@
 '''
 C3SINet
 Copyright (c) 2019-present NAVER Corp.
-MIT license
+MIT licenses
 '''
+
 import torch
 import torch.nn as nn
 

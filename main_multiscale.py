@@ -3,8 +3,9 @@ C3SINet
 Copyright (c) 2019-present NAVER Corp.
 MIT license
 '''
+
 import os
-# os.environ['CUDA_VISIBLE_DEVICES'] = "0"
+os.environ['CUDA_VISIBLE_DEVICES'] = "0"
 import sys
 import time
 import json
@@ -26,10 +27,13 @@ from etc.VisualizeResults import Vis_Result
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-c', '--config', type=str, default='./setting/C3.json', help='JSON file for configuration')
-    parser.add_argument('-n', '--use_nsml', type=bool, default=False, help='Play with NSML!')
+    parser.add_argument('-c', '--config', type=str, default='./setting/C3NetV2.json', help='JSON file for configuration')
     parser.add_argument('-d', '--decoder_only', type=bool, default=False, help='Decoder only training')
-    parser.add_argument('-diff_size', type=int, default=2, help='if model out size diff from input')
+    # parser.add_argument('-o', '--optim', type=str, default="Adam", help='Adam , SGD, RMS')
+    # parser.add_argument('-s', '--lrsch', type=str, default="multistep", help='step, poly, multistep, warmpoly')
+    # parser.add_argument('-t', '--wd_tfmode', type=bool, default=True, help='Play with NSML!')
+    # parser.add_argument('-w', '--weight_decay', type=float, default=2e-4, help='value for weight decay')
+
 
     args = parser.parse_args()
 
@@ -56,23 +60,14 @@ if __name__ == '__main__':
         model = models.__dict__[train_config["Model"]]( classes=train_config["num_classes"],
              p=train_config["p"], q=train_config["q"], D_rate = train_config["D_rate"], chnn = train_config["chnn"])
 
-    elif train_config["Model"].startswith('Enc_ESPNet'):
-        model = models.__dict__[train_config["Model"]](
-            classes=train_config["num_classes"], p=train_config["p"],
-            q=train_config["q"], chnn = train_config["chnn"])
 
 
     model_name = train_config["Model"]
 
 
-
     #################### common model setting and opt setting  #######################################
 
-    if args.use_nsml:
-        from nsml import DATASET_PATH
-        data_config['data_dir'] = os.path.join(DATASET_PATH, 'train')
-
-    nsml_logger = Logger(8097, './logs', args.use_nsml)
+    nsml_logger = Logger(8097, './logs', False)
 
 
     start_epoch = 0
@@ -104,7 +99,7 @@ if __name__ == '__main__':
         print("GPU setting Done")
   ###################################stage Enc setting ##############################################
     if (not args.decoder_only):
-        logger, this_savedir = info_setting(train_config['save_dir'], train_config["Model"], total_paramters, N_flop)
+        logger, this_savedir = info_setting(train_config['save_dir'], train_config["Model"])
         logger.flush()
         logdir = this_savedir.split(train_config['save_dir'])[1]
 
@@ -134,7 +129,16 @@ if __name__ == '__main__':
                         params_set += [{'params': [value], 'weight_decay': args.weight_decay}]
                 else:
                     params_set += [{'params': [value], 'weight_decay': others}]
-
+            #
+            #         if "bn" in key:
+            #             if "weight" in key:
+            #                 params_set += [{'params': [value], 'weight_decay': others}]
+            #                 names_set.append(key)
+            #             else:
+            #                 params_set += [{'params': [value], 'weight_decay': 0.0}]
+            #         else:
+            #             params_set += [{'params': [value], 'weight_decay': 0.0}]
+            # print(names_set)
 
             if args.optim == "Adam":
                 optimizer = torch.optim.Adam(params_set, train_config['learning_rate'], (0.9, 0.999), eps=1e-08,
@@ -271,10 +275,7 @@ if __name__ == '__main__':
         logger.close()
 
         print(" Enc max iou : " + Max_name + '\t' + str(Max_val_iou))
-        #Vis_Result(model_name, args.config, args.use_nsml, Max_name)
 
-        # Vis_Result(model_name, args.config, args.use_nsml, Max_name)
-        # exit(0)
         #########################################---Decoder---##################################################
 
         print("get max iou file : " + Max_name)
@@ -286,26 +287,10 @@ if __name__ == '__main__':
                 classes=train_config["num_classes"], p=train_config["p"], q=train_config["q"],
                 D_rate=train_config["D_rate"], chnn=train_config["chnn"], encoderFile=Max_name)
 
-        elif model_name.startswith('Dnc_ESP'):
-            model = models.__dict__[model_name](
-                classes=train_config["num_classes"], p=train_config["p"], q=train_config["q"],
-                encoderFile=Max_name, chnn=train_config["chnn"]
-            )
 
         else:
             print(model_name + " \t wrong model name")
             exit(0)
-
-        batch = torch.FloatTensor(1, 3, 1024, 512)
-        model_eval = add_flops_counting_methods(model)
-        model_eval.eval().start_flops_count()
-        out = model_eval(batch)
-        N_flop = model.compute_average_flops_cost()
-        print('Flops:  {}'.format(flops_to_string(N_flop)))
-        print('Params: ' + get_model_parameters_number(model))
-        print('Output shape: {}'.format(list(out.shape)))
-        total_paramters = netParams(model)
-        print(total_paramters)
 
         if num_gpu > 0:
             if num_gpu >1:
@@ -317,7 +302,7 @@ if __name__ == '__main__':
     start_epoch = 0
     Max_val_iou = 0.0
     Max_name = ''
-    logger, this_savedir = info_setting(train_config['save_dir'], model_name, total_paramters, N_flop)
+    logger, this_savedir = info_setting(train_config['save_dir'], model_name)
     logger.flush()
     logdir = this_savedir.split(train_config['save_dir'])[1]
 
@@ -354,6 +339,15 @@ if __name__ == '__main__':
             else:
                 params_set += [{'params': [value], 'weight_decay': others}]
 
+        #         if "bn" in key:
+        #             if "weight" in key:
+        #                 params_set += [{'params': [value], 'weight_decay': others}]
+        #                 names_set.append(key)
+        #             else:
+        #                 params_set += [{'params': [value], 'weight_decay': 0.0}]
+        #         else:
+        #             params_set += [{'params': [value], 'weight_decay': 0.0}]
+        # print(names_set)
 
         if args.optim == "Adam":
             optimizer = torch.optim.Adam(params_set, train_config['learning_rate2'], (0.9, 0.999), eps=1e-08,
@@ -423,6 +417,7 @@ if __name__ == '__main__':
         lossTr, overall_acc_tr, per_class_acc_tr, per_class_iu_tr, mIOU_tr = \
             train(num_gpu, data_config["classes"], trainLoader, model, criteria, optimizer, epoch, train_config["epochs"])
 
+        # evaluate on validation set
 
         lossVal, overall_acc_val, per_class_acc_val, per_class_iu_val, mIOU_val = \
             val(num_gpu, data_config["classes"], valLoader, model, criteria)
@@ -493,7 +488,7 @@ if __name__ == '__main__':
 
     print("========== TRAINING FINISHED ===========")
 
-    Vis_Result(model_name, args.config, args.use_nsml, Max_name)
+    Vis_Result(model_name, args.config, False, Max_name)
 
 
 

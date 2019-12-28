@@ -3,7 +3,6 @@ C3SINet
 Copyright (c) 2019-present NAVER Corp.
 MIT license
 '''
-
 import os
 # os.environ['CUDA_VISIBLE_DEVICES'] = "1"
 

@@ -1,5 +1,5 @@
 import os
-os.environ['CUDA_VISIBLE_DEVICES'] = "1"
+# os.environ['CUDA_VISIBLE_DEVICES'] = "1"
 
 import cv2
 import numpy as np
@@ -16,6 +16,7 @@ import models
 from etc.utils import *
 
 parser = ArgumentParser()
+# # parser.add_argument('--model', default="gDAsymNL_ESP_1", help='Model name')
 parser.add_argument('-c', '--config', type=str, default='', help='JSON file for configuration')
 parser.add_argument('--data_dir', default="../../DATA/cityscape/leftImg8bit/test", help='Data directory')
 parser.add_argument('--img_extn', default="png", help='RGB Image format')
