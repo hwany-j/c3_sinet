@@ -33,6 +33,7 @@ Squeeze Modules and Information Blocking Decoder"
 | SINet        |    0.12       |       1.22     |   1024*2048    |       68.22   |     66.46    | [link](https://www.cityscapes-dataset.com/anonymous-results/?id=2ce70c4caebe666258a8138c0f296b763bdd160743a75500ed38f7854ff59a68) | 
 
 * C3NetV2 has same encoder structure with C3Net, but uses bilinear upsampling for a decodder structure. 
+* SINet is accepted in WACV2020.
 
 
 
